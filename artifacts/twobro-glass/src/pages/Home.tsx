@@ -28,32 +28,48 @@ const PRODUCTS = THICKNESSES.flatMap(thickness =>
   }))
 );
 
+const FORMICA_PRODUCTS = [
+  { id: "formica-plain",     name: "Plain / Solid",  desc: "Single-colour matte finish"    },
+  { id: "formica-woodgrain", name: "Woodgrain",       desc: "Natural wood-look laminate"    },
+  { id: "formica-marble",    name: "Marble / Stone",  desc: "Stone-pattern decorative sheet"},
+  { id: "formica-glossy",    name: "High Gloss",      desc: "Glossy finish, modern look"   },
+];
+
 export default function Home() {
   const [formData, setFormData] = useState({ name: "", phone: "", message: "" });
 
   const [qty, setQty] = useState<Record<string, string>>(
-    Object.fromEntries(PRODUCTS.map(p => [p.id, ""]))
+    Object.fromEntries([...PRODUCTS, ...FORMICA_PRODUCTS].map(p => [p.id, ""]))
   );
 
-  const selectedItems = PRODUCTS.filter(p => Number(qty[p.id]) > 0);
+  const selectedPlywood = PRODUCTS.filter(p => Number(qty[p.id]) > 0);
+  const selectedFormica = FORMICA_PRODUCTS.filter(p => Number(qty[p.id]) > 0);
+  const selectedItems = [...selectedPlywood, ...selectedFormica];
   const totalSheets = selectedItems.reduce((sum, p) => sum + Number(qty[p.id]), 0);
 
   const sendBulkWhatsApp = () => {
-    const lines = selectedItems
+    const plywoodLines = selectedPlywood
       .map(p => `• ${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`)
       .join("\n");
-    const msg = `Hello, I would like to place a plywood order from Twobro Glass Centre.\n\n*Order Details:*\n${lines}\n\n*Total: ${totalSheets} sheets*`;
+    const formicaLines = selectedFormica
+      .map(p => `• Formica ${p.name}: ${qty[p.id]} sheets`)
+      .join("\n");
+    const sections = [
+      plywoodLines && `*Plywood:*\n${plywoodLines}`,
+      formicaLines && `*Formica:*\n${formicaLines}`,
+    ].filter(Boolean).join("\n\n");
+    const msg = `Hello, I would like to place an order from Twobro Glass Centre.\n\n*Order Details:*\n${sections}\n\n*Total: ${totalSheets} sheets*`;
     window.open(`https://wa.me/9779807296911?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const lines = selectedItems.length
-      ? selectedItems.map(p => `${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`).join("\n")
-      : "(no products selected in the order sheet)";
-    const subject = encodeURIComponent("Plywood Order - Twobro Glass Centre");
+    const plywoodLines = selectedPlywood.map(p => `${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`).join("\n");
+    const formicaLines = selectedFormica.map(p => `Formica ${p.name}: ${qty[p.id]} sheets`).join("\n");
+    const allLines = [plywoodLines, formicaLines].filter(Boolean).join("\n") || "(no products selected)";
+    const subject = encodeURIComponent("Order - Twobro Glass Centre");
     const body = encodeURIComponent(
-      `Name: ${formData.name}\nPhone: ${formData.phone}\n\nOrder:\n${lines}\n\nNotes:\n${formData.message}`
+      `Name: ${formData.name}\nPhone: ${formData.phone}\n\nOrder:\n${allLines}\n\nNotes:\n${formData.message}`
     );
     window.location.href = `mailto:${EMAIL_ADDRESS}?subject=${subject}&body=${body}`;
   };
@@ -251,6 +267,60 @@ export default function Home() {
                     )}
                   </div>
                 ))}
+
+                {/* Formica section divider */}
+                <div className="border-t-2 border-border bg-muted/40 px-4 py-2 flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Formica / Laminate</span>
+                </div>
+
+                {/* Formica rows */}
+                {FORMICA_PRODUCTS.map((fp, idx) => {
+                  const hasQty = Number(qty[fp.id]) > 0;
+                  return (
+                    <motion.div
+                      key={fp.id}
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: idx * 0.05 }}
+                      className={`grid grid-cols-12 items-center gap-0 px-4 py-3 transition-colors ${idx < FORMICA_PRODUCTS.length - 1 ? "border-b border-border/60" : ""} ${hasQty ? "bg-violet-50 dark:bg-violet-950/20" : "hover:bg-muted/30"}`}
+                      data-testid={`row-product-${fp.id}`}
+                    >
+                      {/* Name */}
+                      <div className="col-span-2">
+                        {idx === 0 ? (
+                          <span className="text-sm font-bold text-foreground">Sheet</span>
+                        ) : (
+                          <span className="text-muted-foreground/30 text-sm pl-1">╰</span>
+                        )}
+                      </div>
+
+                      {/* Formica badge */}
+                      <div className="col-span-2">
+                        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 text-violet-700 font-bold text-xs">F</span>
+                      </div>
+
+                      {/* Description */}
+                      <div className="col-span-4">
+                        <span className="text-sm font-medium text-foreground">{fp.name}</span>
+                        <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">— {fp.desc}</span>
+                      </div>
+
+                      {/* Qty input */}
+                      <div className="col-span-4 flex justify-end">
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={qty[fp.id]}
+                          onChange={e => setQty(prev => ({ ...prev, [fp.id]: e.target.value }))}
+                          className={`w-24 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-violet-400 text-violet-600" : ""}`}
+                          data-testid={`input-qty-${fp.id}`}
+                        />
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
 
               {/* Order summary + send button */}
