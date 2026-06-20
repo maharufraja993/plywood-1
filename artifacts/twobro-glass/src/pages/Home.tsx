@@ -7,9 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 
-const WHATSAPP_LINK = "https://wa.me/9779800000000?text=Hello%2C%20I%20want%20to%20order%20plywood";
-// NOTE: The business owner needs to update the phone number in the above link.
-const EMAIL_ADDRESS = "twobroglasscentre@gmail.com";
+const WHATSAPP_LINK = "https://wa.me/9779807296911?text=Hello%2C%20I%20want%20to%20order%20plywood%20from%20Twobro%20Glass%20Centre";
+const PHONE_NUMBER = "9807296911";
+const EMAIL_ADDRESS = "maharufraja078@gmail.com";
 
 const THICKNESSES = ["6mm", "10mm", "12mm", "18mm"];
 const GRADES = [
@@ -195,30 +195,64 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-16 items-start">
               
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Ready to Order?</h2>
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Ready to Order?</h2>
                 <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                  Get in touch with us instantly via WhatsApp for the fastest response, or fill out the form to send us a detailed email order.
+                  Get in touch instantly via WhatsApp or phone for the fastest response, or fill out the form to send a detailed email order.
                 </p>
 
-                <div className="rounded-2xl border border-border bg-background p-8 mb-8">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366]/10 text-[#25D366]">
-                      <MessageCircle className="h-6 w-6" />
+                {/* Order Box */}
+                <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-6 space-y-4" data-testid="box-order-contact">
+                  <h3 className="text-xl font-bold text-foreground">Contact Us to Order</h3>
+
+                  {/* Phone call */}
+                  <a
+                    href={`tel:${PHONE_NUMBER}`}
+                    className="flex items-center gap-4 rounded-xl border border-border bg-background px-5 py-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                    data-testid="link-order-phone"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Phone className="h-5 w-5" />
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold">Fastest: WhatsApp</h3>
-                      <p className="text-muted-foreground text-sm">Direct message to owner</p>
+                    <div className="flex-grow">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Call / WhatsApp</p>
+                      <p className="text-xl font-bold text-foreground">{PHONE_NUMBER}</p>
                     </div>
-                  </div>
-                  <Button 
-                    asChild 
-                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-bold h-12 text-lg mt-4"
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </a>
+
+                  {/* WhatsApp message */}
+                  <a
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 px-5 py-4 hover:bg-[#25D366]/10 hover:border-[#25D366]/60 transition-all"
                     data-testid="btn-order-section-whatsapp"
                   >
-                    <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-                      Chat on WhatsApp
-                    </a>
-                  </Button>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15 text-[#25D366]">
+                      <MessageCircle className="h-5 w-5" />
+                    </div>
+                    <div className="flex-grow">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">WhatsApp Message</p>
+                      <p className="text-lg font-bold text-[#25D366]">Chat on WhatsApp</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </a>
+
+                  {/* Email */}
+                  <a
+                    href={`mailto:${EMAIL_ADDRESS}`}
+                    className="flex items-center gap-4 rounded-xl border border-border bg-background px-5 py-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                    data-testid="link-order-email"
+                  >
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Mail className="h-5 w-5" />
+                    </div>
+                    <div className="flex-grow">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+                      <p className="text-sm font-semibold text-foreground break-all">{EMAIL_ADDRESS}</p>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </a>
                 </div>
               </div>
 
@@ -340,8 +374,18 @@ export default function Home() {
                       <Phone className="h-6 w-6" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-bold">Contact</h4>
-                      <p className="text-muted-foreground mt-1">Owner will update number</p>
+                      <h4 className="text-lg font-bold">Phone / WhatsApp</h4>
+                      <a href={`tel:${PHONE_NUMBER}`} className="text-primary font-semibold hover:underline mt-1 block" data-testid="link-phone">{PHONE_NUMBER}</a>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Mail className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-bold">Email</h4>
+                      <a href={`mailto:${EMAIL_ADDRESS}`} className="text-primary font-semibold hover:underline mt-1 block" data-testid="link-email">{EMAIL_ADDRESS}</a>
                     </div>
                   </div>
                 </div>
