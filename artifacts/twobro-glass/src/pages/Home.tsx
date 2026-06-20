@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, MessageCircle, Clock, ChevronRight } from "lucide-react";
+import { MapPin, Phone, Mail, MessageCircle, Clock, ChevronRight, ShoppingCart, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 
 const WHATSAPP_LINK = "https://wa.me/9779807296911?text=Hello%2C%20I%20want%20to%20order%20plywood%20from%20Twobro%20Glass%20Centre";
 const PHONE_NUMBER = "9807296911";
@@ -29,37 +29,37 @@ const PRODUCTS = THICKNESSES.flatMap(thickness =>
 );
 
 export default function Home() {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    product: "",
-    quantity: "",
-    message: ""
-  });
+  const [formData, setFormData] = useState({ name: "", phone: "", message: "" });
 
-  const [cardQty, setCardQty] = useState<Record<string, string>>(
+  const [qty, setQty] = useState<Record<string, string>>(
     Object.fromEntries(PRODUCTS.map(p => [p.id, ""]))
   );
 
-  const handleOrderSubmit = (e: React.FormEvent) => {
+  const selectedItems = PRODUCTS.filter(p => Number(qty[p.id]) > 0);
+  const totalSheets = selectedItems.reduce((sum, p) => sum + Number(qty[p.id]), 0);
+
+  const sendBulkWhatsApp = () => {
+    const lines = selectedItems
+      .map(p => `• ${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`)
+      .join("\n");
+    const msg = `Hello, I would like to place a plywood order from Twobro Glass Centre.\n\n*Order Details:*\n${lines}\n\n*Total: ${totalSheets} sheets*`;
+    window.open(`https://wa.me/9779807296911?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const lines = selectedItems.length
+      ? selectedItems.map(p => `${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`).join("\n")
+      : "(no products selected in the order sheet)";
     const subject = encodeURIComponent("Plywood Order - Twobro Glass Centre");
     const body = encodeURIComponent(
-      `Name: ${formData.name}\nPhone: ${formData.phone}\nProduct: ${formData.product}\nQuantity: ${formData.quantity}\n\nMessage:\n${formData.message}`
+      `Name: ${formData.name}\nPhone: ${formData.phone}\n\nOrder:\n${lines}\n\nNotes:\n${formData.message}`
     );
     window.location.href = `mailto:${EMAIL_ADDRESS}?subject=${subject}&body=${body}`;
   };
 
-  const orderOnWhatsApp = (product: string, qty: string) => {
-    const msg = `Hello, I want to order plywood from Twobro Glass Centre.\n\nProduct: ${product}\nQuantity: ${qty || "Not specified"} sheets`;
-    window.open(`https://wa.me/9779807296911?text=${encodeURIComponent(msg)}`, "_blank");
-  };
-
-  const scrollToOrder = (product?: string) => {
-    if (product) {
-      setFormData(prev => ({ ...prev, product }));
-    }
-    document.getElementById("order")?.scrollIntoView({ behavior: "smooth" });
+  const scrollToProducts = () => {
+    document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -126,117 +126,183 @@ export default function Home() {
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
-                  size="lg" 
-                  asChild 
-                  className="bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold text-lg h-14 px-8"
-                  data-testid="btn-hero-whatsapp"
+                  size="lg"
+                  onClick={scrollToProducts}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg h-14 px-8"
+                  data-testid="btn-hero-order"
                 >
-                  <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
-                    Order on WhatsApp <ChevronRight className="ml-2 h-5 w-5" />
-                  </a>
+                  <ShoppingCart className="mr-2 h-5 w-5" /> Place an Order
                 </Button>
                 <Button 
                   size="lg" 
+                  asChild
                   variant="outline" 
-                  onClick={() => scrollToOrder()}
-                  className="h-14 px-8 text-lg font-medium border-primary/20 hover:bg-primary/5"
-                  data-testid="btn-hero-email"
+                  className="h-14 px-8 text-lg font-medium border-primary/20 hover:bg-primary/5 bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20"
+                  data-testid="btn-hero-whatsapp"
                 >
-                  Request a Quote
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
+                    <MessageCircle className="mr-2 h-5 w-5" /> WhatsApp
+                  </a>
                 </Button>
               </div>
             </motion.div>
           </div>
         </section>
 
-        {/* Products Section */}
-        <section id="products" className="py-24 bg-background">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Our Plywood Range</h2>
-              <p className="text-muted-foreground text-lg max-w-2xl">
-                Available in multiple thicknesses and grades to suit every project requirement, from premium furniture to general construction.
-              </p>
-            </div>
+        {/* Order Sheet Section */}
+        <section id="products" className="py-20 bg-background">
+          <div className="container mx-auto max-w-4xl px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className="mb-10">
+                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Place Your Order</h2>
+                <p className="text-muted-foreground text-lg">
+                  Enter quantities for the plywood you need, then send everything at once on WhatsApp.
+                </p>
+              </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {PRODUCTS.map((product, idx) => (
-                <motion.div 
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  className="group relative flex flex-col rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-md hover:border-primary/40 transition-all"
-                  data-testid={`card-product-${product.id}`}
-                >
-                  <div className="mb-4 flex items-start justify-between">
-                    <div>
-                      <span className="text-3xl font-bold text-foreground">{product.thickness}</span>
-                    </div>
-                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary font-bold text-xl">
-                      {product.gradeLabel}
-                    </div>
+              {/* Grade legend */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                {GRADES.map(g => (
+                  <div key={g.label} className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">{g.label}</span>
+                    <span className="font-medium text-foreground">{g.name}</span>
+                    <span className="text-muted-foreground">— {g.desc}</span>
                   </div>
-                  
-                  <div className="mb-4 flex-grow">
-                    <h3 className="font-semibold text-lg text-foreground">{product.gradeName} Grade</h3>
-                    <p className="text-muted-foreground text-sm mt-1">{product.gradeDesc}</p>
-                  </div>
+                ))}
+              </div>
 
-                  <div className="mb-3 space-y-1">
-                    <Label htmlFor={`qty-${product.id}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      Quantity (sheets)
-                    </Label>
-                    <Input
-                      id={`qty-${product.id}`}
-                      type="number"
-                      min="1"
-                      placeholder="e.g. 50"
-                      value={cardQty[product.id]}
-                      onChange={e => setCardQty(prev => ({ ...prev, [product.id]: e.target.value }))}
-                      className="h-9 text-sm"
-                      data-testid={`input-qty-${product.id}`}
-                    />
-                  </div>
-                  
-                  <Button 
-                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold transition-colors"
-                    onClick={() => orderOnWhatsApp(
-                      `${product.thickness} - Grade ${product.gradeLabel} (${product.gradeName})`,
-                      cardQty[product.id]
+              {/* Order table */}
+              <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+                {/* Table header */}
+                <div className="grid grid-cols-12 gap-0 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <div className="col-span-2">Size</div>
+                  <div className="col-span-2">Grade</div>
+                  <div className="col-span-4">Type</div>
+                  <div className="col-span-4 text-right">Qty (sheets)</div>
+                </div>
+
+                {/* Rows grouped by thickness */}
+                {THICKNESSES.map((thickness, tIdx) => (
+                  <div key={thickness}>
+                    {GRADES.map((grade, gIdx) => {
+                      const product = PRODUCTS.find(p => p.thickness === thickness && p.gradeLabel === grade.label)!;
+                      const isLast = tIdx === THICKNESSES.length - 1 && gIdx === GRADES.length - 1;
+                      const hasQty = Number(qty[product.id]) > 0;
+                      return (
+                        <motion.div
+                          key={product.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.3, delay: (tIdx * 3 + gIdx) * 0.04 }}
+                          className={`grid grid-cols-12 items-center gap-0 px-4 py-3 transition-colors ${!isLast ? "border-b border-border/60" : ""} ${hasQty ? "bg-primary/5" : "hover:bg-muted/30"}`}
+                          data-testid={`row-product-${product.id}`}
+                        >
+                          {/* Size — only show for first grade in group */}
+                          <div className="col-span-2">
+                            {gIdx === 0 ? (
+                              <span className="text-lg font-bold text-foreground">{thickness}</span>
+                            ) : (
+                              <span className="text-muted-foreground/30 text-sm pl-1">╰</span>
+                            )}
+                          </div>
+
+                          {/* Grade badge */}
+                          <div className="col-span-2">
+                            <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg font-bold text-sm
+                              ${grade.label === "A" ? "bg-amber-100 text-amber-700" : ""}
+                              ${grade.label === "B" ? "bg-blue-100 text-blue-700" : ""}
+                              ${grade.label === "C" ? "bg-slate-100 text-slate-600" : ""}
+                            `}>
+                              {grade.label}
+                            </span>
+                          </div>
+
+                          {/* Description */}
+                          <div className="col-span-4">
+                            <span className="text-sm font-medium text-foreground">{grade.name}</span>
+                            <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">— {grade.desc}</span>
+                          </div>
+
+                          {/* Qty input */}
+                          <div className="col-span-4 flex justify-end">
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="0"
+                              value={qty[product.id]}
+                              onChange={e => setQty(prev => ({ ...prev, [product.id]: e.target.value }))}
+                              className={`w-24 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-primary text-primary" : ""}`}
+                              data-testid={`input-qty-${product.id}`}
+                            />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+
+                    {/* Thickness divider */}
+                    {tIdx < THICKNESSES.length - 1 && (
+                      <div className="border-b-2 border-border/80" />
                     )}
-                    data-testid={`btn-order-${product.id}`}
+                  </div>
+                ))}
+              </div>
+
+              {/* Order summary + send button */}
+              <div className="mt-6 rounded-2xl border-2 border-primary/20 bg-primary/5 p-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    {selectedItems.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">Enter quantities above to build your order.</p>
+                    ) : (
+                      <div>
+                        <p className="font-semibold text-foreground text-sm mb-1">
+                          {selectedItems.length} product{selectedItems.length > 1 ? "s" : ""} selected — <span className="text-primary">{totalSheets} sheets total</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {selectedItems.map(p => (
+                            <Badge key={p.id} variant="secondary" className="text-xs bg-background border border-primary/20">
+                              {p.thickness} Grade {p.gradeLabel}: {qty[p.id]}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    size="lg"
+                    disabled={selectedItems.length === 0}
+                    onClick={sendBulkWhatsApp}
+                    className="shrink-0 bg-[#25D366] hover:bg-[#20bd5a] disabled:opacity-40 text-white font-bold h-12 px-6 text-base"
+                    data-testid="btn-send-bulk-whatsapp"
                   >
-                    <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
+                    <Send className="mr-2 h-5 w-5" /> Send Order on WhatsApp
                   </Button>
-                </motion.div>
-              ))}
-            </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* Order Section */}
-        <section id="order" className="py-24 bg-card border-y border-border relative">
-          <div className="container mx-auto max-w-6xl px-4">
-            <div className="grid md:grid-cols-2 gap-16 items-start">
-              
+        {/* Contact Section */}
+        <section id="order" className="py-20 bg-card border-y border-border">
+          <div className="container mx-auto max-w-4xl px-4">
+            <div className="grid md:grid-cols-2 gap-12 items-start">
+
+              {/* Contact box */}
               <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Ready to Order?</h2>
-                <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                  Get in touch instantly via WhatsApp or phone for the fastest response, or fill out the form to send a detailed email order.
-                </p>
+                <h2 className="text-3xl font-bold text-foreground mb-3">Get in Touch</h2>
+                <p className="text-muted-foreground mb-8">Call, WhatsApp, or email — we respond fast.</p>
 
-                {/* Order Box */}
-                <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-6 space-y-4" data-testid="box-order-contact">
-                  <h3 className="text-xl font-bold text-foreground">Contact Us to Order</h3>
-
-                  {/* Phone call */}
-                  <a
-                    href={`tel:${PHONE_NUMBER}`}
+                <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 space-y-3" data-testid="box-order-contact">
+                  <a href={`tel:${PHONE_NUMBER}`}
                     className="flex items-center gap-4 rounded-xl border border-border bg-background px-5 py-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
-                    data-testid="link-order-phone"
-                  >
+                    data-testid="link-order-phone">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Phone className="h-5 w-5" />
                     </div>
@@ -247,30 +313,22 @@ export default function Home() {
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </a>
 
-                  {/* WhatsApp message */}
-                  <a
-                    href={WHATSAPP_LINK}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-4 rounded-xl border border-[#25D366]/30 bg-[#25D366]/5 px-5 py-4 hover:bg-[#25D366]/10 hover:border-[#25D366]/60 transition-all"
-                    data-testid="btn-order-section-whatsapp"
-                  >
+                    data-testid="btn-order-section-whatsapp">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#25D366]/15 text-[#25D366]">
                       <MessageCircle className="h-5 w-5" />
                     </div>
                     <div className="flex-grow">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">WhatsApp Message</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">WhatsApp</p>
                       <p className="text-lg font-bold text-[#25D366]">Chat on WhatsApp</p>
                     </div>
                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
                   </a>
 
-                  {/* Email */}
-                  <a
-                    href={`mailto:${EMAIL_ADDRESS}`}
+                  <a href={`mailto:${EMAIL_ADDRESS}`}
                     className="flex items-center gap-4 rounded-xl border border-border bg-background px-5 py-4 hover:border-primary/50 hover:bg-primary/5 transition-all"
-                    data-testid="link-order-email"
-                  >
+                    data-testid="link-order-email">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Mail className="h-5 w-5" />
                     </div>
@@ -283,80 +341,52 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-border bg-background p-6 md:p-8 shadow-sm">
-                <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-                  <Mail className="h-6 w-6 text-primary" /> Email Order Form
+              {/* Email form — picks up order from the sheet above */}
+              <div className="rounded-2xl border border-border bg-background p-6 shadow-sm">
+                <h3 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" /> Send by Email
                 </h3>
-                
-                <form onSubmit={handleOrderSubmit} className="space-y-5" data-testid="form-email-order">
-                  <div className="grid sm:grid-cols-2 gap-5">
-                    <div className="space-y-2">
+                <p className="text-muted-foreground text-sm mb-5">
+                  Your order sheet selections will be included automatically.
+                </p>
+
+                <form onSubmit={handleEmailSubmit} className="space-y-4" data-testid="form-email-order">
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
                       <Label htmlFor="name">Full Name</Label>
-                      <Input 
-                        id="name" 
-                        required 
-                        value={formData.name} 
+                      <Input id="name" required value={formData.name}
                         onChange={e => setFormData(p => ({ ...p, name: e.target.value }))}
-                        placeholder="John Doe"
-                        data-testid="input-order-name"
-                      />
+                        placeholder="Your name" data-testid="input-order-name" />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input 
-                        id="phone" 
-                        required 
-                        value={formData.phone} 
+                      <Input id="phone" required value={formData.phone}
                         onChange={e => setFormData(p => ({ ...p, phone: e.target.value }))}
-                        placeholder="98XXXXXXXX"
-                        data-testid="input-order-phone"
-                      />
+                        placeholder="98XXXXXXXX" data-testid="input-order-phone" />
                     </div>
                   </div>
 
-                  <div className="grid sm:grid-cols-3 gap-5">
-                    <div className="sm:col-span-2 space-y-2">
-                      <Label htmlFor="product">Product</Label>
-                      <Select value={formData.product} onValueChange={v => setFormData(p => ({ ...p, product: v }))}>
-                        <SelectTrigger id="product" data-testid="select-order-product">
-                          <SelectValue placeholder="Select plywood type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {PRODUCTS.map(p => (
-                            <SelectItem key={p.id} value={`${p.thickness} - Grade ${p.gradeLabel} (${p.gradeName})`}>
-                              {p.thickness} - Grade {p.gradeLabel}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  {selectedItems.length > 0 && (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm">
+                      <p className="font-semibold text-foreground mb-1">Order from sheet ({totalSheets} sheets):</p>
+                      {selectedItems.map(p => (
+                        <p key={p.id} className="text-muted-foreground">
+                          {p.thickness} Grade {p.gradeLabel} — {qty[p.id]} sheets
+                        </p>
+                      ))}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="quantity">Quantity</Label>
-                      <Input 
-                        id="quantity" 
-                        required 
-                        value={formData.quantity} 
-                        onChange={e => setFormData(p => ({ ...p, quantity: e.target.value }))}
-                        placeholder="e.g. 50 sheets"
-                        data-testid="input-order-quantity"
-                      />
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Additional Details (Optional)</Label>
-                    <Textarea 
-                      id="message" 
-                      rows={4}
-                      value={formData.message} 
+                  <div className="space-y-1.5">
+                    <Label htmlFor="message">Notes (optional)</Label>
+                    <Textarea id="message" rows={3} value={formData.message}
                       onChange={e => setFormData(p => ({ ...p, message: e.target.value }))}
-                      placeholder="Delivery instructions, specific requirements..."
-                      data-testid="input-order-message"
-                    />
+                      placeholder="Delivery address, special requirements..."
+                      data-testid="input-order-message" />
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full text-lg h-12" data-testid="btn-submit-email-order">
-                    Prepare Email
+                  <Button type="submit" size="lg" className="w-full h-11" data-testid="btn-submit-email-order">
+                    <Mail className="mr-2 h-4 w-4" /> Send via Email
                   </Button>
                 </form>
               </div>
