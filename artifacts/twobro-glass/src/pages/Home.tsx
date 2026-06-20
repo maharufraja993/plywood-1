@@ -37,6 +37,10 @@ export default function Home() {
     message: ""
   });
 
+  const [cardQty, setCardQty] = useState<Record<string, string>>(
+    Object.fromEntries(PRODUCTS.map(p => [p.id, ""]))
+  );
+
   const handleOrderSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const subject = encodeURIComponent("Plywood Order - Twobro Glass Centre");
@@ -44,6 +48,11 @@ export default function Home() {
       `Name: ${formData.name}\nPhone: ${formData.phone}\nProduct: ${formData.product}\nQuantity: ${formData.quantity}\n\nMessage:\n${formData.message}`
     );
     window.location.href = `mailto:${EMAIL_ADDRESS}?subject=${subject}&body=${body}`;
+  };
+
+  const orderOnWhatsApp = (product: string, qty: string) => {
+    const msg = `Hello, I want to order plywood from Twobro Glass Centre.\n\nProduct: ${product}\nQuantity: ${qty || "Not specified"} sheets`;
+    window.open(`https://wa.me/9779807296911?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const scrollToOrder = (product?: string) => {
@@ -170,18 +179,36 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  <div className="mb-6 flex-grow">
+                  <div className="mb-4 flex-grow">
                     <h3 className="font-semibold text-lg text-foreground">{product.gradeName} Grade</h3>
                     <p className="text-muted-foreground text-sm mt-1">{product.gradeDesc}</p>
                   </div>
+
+                  <div className="mb-3 space-y-1">
+                    <Label htmlFor={`qty-${product.id}`} className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      Quantity (sheets)
+                    </Label>
+                    <Input
+                      id={`qty-${product.id}`}
+                      type="number"
+                      min="1"
+                      placeholder="e.g. 50"
+                      value={cardQty[product.id]}
+                      onChange={e => setCardQty(prev => ({ ...prev, [product.id]: e.target.value }))}
+                      className="h-9 text-sm"
+                      data-testid={`input-qty-${product.id}`}
+                    />
+                  </div>
                   
                   <Button 
-                    variant="secondary" 
-                    className="w-full bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors"
-                    onClick={() => scrollToOrder(`${product.thickness} - Grade ${product.gradeLabel} (${product.gradeName})`)}
+                    className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold transition-colors"
+                    onClick={() => orderOnWhatsApp(
+                      `${product.thickness} - Grade ${product.gradeLabel} (${product.gradeName})`,
+                      cardQty[product.id]
+                    )}
                     data-testid={`btn-order-${product.id}`}
                   >
-                    Order Now
+                    <MessageCircle className="mr-2 h-4 w-4" /> Order on WhatsApp
                   </Button>
                 </motion.div>
               ))}
