@@ -28,6 +28,8 @@ const PRODUCTS = THICKNESSES.flatMap(thickness =>
   }))
 );
 
+const SHEET_SIZES = ["5×3 ft", "5×4 ft", "6×3 ft", "6×4 ft", "7×3 ft", "7×4 ft", "8×3 ft", "8×4 ft"];
+
 const FORMICA_PRODUCTS = [
   { id: "formica-plain",     name: "Plain / Solid",  desc: "Single-colour matte finish"    },
   { id: "formica-woodgrain", name: "Woodgrain",       desc: "Natural wood-look laminate"    },
@@ -41,18 +43,23 @@ export default function Home() {
   const [qty, setQty] = useState<Record<string, string>>(
     Object.fromEntries([...PRODUCTS, ...FORMICA_PRODUCTS].map(p => [p.id, ""]))
   );
+  const [size, setSize] = useState<Record<string, string>>(
+    Object.fromEntries([...PRODUCTS, ...FORMICA_PRODUCTS].map(p => [p.id, ""]))
+  );
 
   const selectedPlywood = PRODUCTS.filter(p => Number(qty[p.id]) > 0);
   const selectedFormica = FORMICA_PRODUCTS.filter(p => Number(qty[p.id]) > 0);
   const selectedItems = [...selectedPlywood, ...selectedFormica];
   const totalSheets = selectedItems.reduce((sum, p) => sum + Number(qty[p.id]), 0);
 
+  const fmtSize = (id: string) => size[id] ? ` [${size[id]}]` : "";
+
   const sendBulkWhatsApp = () => {
     const plywoodLines = selectedPlywood
-      .map(p => `• ${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`)
+      .map(p => `• ${p.thickness} Grade ${p.gradeLabel} (${p.gradeName})${fmtSize(p.id)}: ${qty[p.id]} sheets`)
       .join("\n");
     const formicaLines = selectedFormica
-      .map(p => `• Formica ${p.name}: ${qty[p.id]} sheets`)
+      .map(p => `• Formica ${p.name}${fmtSize(p.id)}: ${qty[p.id]} sheets`)
       .join("\n");
     const sections = [
       plywoodLines && `*Plywood:*\n${plywoodLines}`,
@@ -64,8 +71,8 @@ export default function Home() {
 
   const handleEmailSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const plywoodLines = selectedPlywood.map(p => `${p.thickness} Grade ${p.gradeLabel} (${p.gradeName}): ${qty[p.id]} sheets`).join("\n");
-    const formicaLines = selectedFormica.map(p => `Formica ${p.name}: ${qty[p.id]} sheets`).join("\n");
+    const plywoodLines = selectedPlywood.map(p => `${p.thickness} Grade ${p.gradeLabel} (${p.gradeName})${fmtSize(p.id)}: ${qty[p.id]} sheets`).join("\n");
+    const formicaLines = selectedFormica.map(p => `Formica ${p.name}${fmtSize(p.id)}: ${qty[p.id]} sheets`).join("\n");
     const allLines = [plywoodLines, formicaLines].filter(Boolean).join("\n") || "(no products selected)";
     const subject = encodeURIComponent("Order - Twobro Glass Centre");
     const body = encodeURIComponent(
@@ -196,10 +203,11 @@ export default function Home() {
               <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
                 {/* Table header */}
                 <div className="grid grid-cols-12 gap-0 border-b border-border bg-muted/50 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <div className="col-span-2">Size</div>
-                  <div className="col-span-2">Grade</div>
-                  <div className="col-span-4">Type</div>
-                  <div className="col-span-4 text-right">Qty (sheets)</div>
+                  <div className="col-span-2">Thickness</div>
+                  <div className="col-span-1">Grd</div>
+                  <div className="col-span-3">Type</div>
+                  <div className="col-span-3">Sheet Size</div>
+                  <div className="col-span-3 text-right">Qty</div>
                 </div>
 
                 {/* Rows grouped by thickness */}
@@ -219,17 +227,17 @@ export default function Home() {
                           className={`grid grid-cols-12 items-center gap-0 px-4 py-3 transition-colors ${!isLast ? "border-b border-border/60" : ""} ${hasQty ? "bg-primary/5" : "hover:bg-muted/30"}`}
                           data-testid={`row-product-${product.id}`}
                         >
-                          {/* Size — only show for first grade in group */}
+                          {/* Thickness — only show for first grade in group */}
                           <div className="col-span-2">
                             {gIdx === 0 ? (
-                              <span className="text-lg font-bold text-foreground">{thickness}</span>
+                              <span className="text-base font-bold text-foreground">{thickness}</span>
                             ) : (
                               <span className="text-muted-foreground/30 text-sm pl-1">╰</span>
                             )}
                           </div>
 
                           {/* Grade badge */}
-                          <div className="col-span-2">
+                          <div className="col-span-1">
                             <span className={`inline-flex h-7 w-7 items-center justify-center rounded-lg font-bold text-sm
                               ${grade.label === "A" ? "bg-amber-100 text-amber-700" : ""}
                               ${grade.label === "B" ? "bg-blue-100 text-blue-700" : ""}
@@ -240,20 +248,32 @@ export default function Home() {
                           </div>
 
                           {/* Description */}
-                          <div className="col-span-4">
+                          <div className="col-span-3">
                             <span className="text-sm font-medium text-foreground">{grade.name}</span>
-                            <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">— {grade.desc}</span>
+                          </div>
+
+                          {/* Sheet size select */}
+                          <div className="col-span-3">
+                            <select
+                              value={size[product.id]}
+                              onChange={e => setSize(prev => ({ ...prev, [product.id]: e.target.value }))}
+                              className={`w-full h-9 rounded-md border px-2 text-sm bg-background transition-colors focus:outline-none focus:ring-1 focus:ring-primary ${size[product.id] ? "border-primary text-foreground" : "border-border text-muted-foreground"}`}
+                              data-testid={`select-size-${product.id}`}
+                            >
+                              <option value="">Any size</option>
+                              {SHEET_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
                           </div>
 
                           {/* Qty input */}
-                          <div className="col-span-4 flex justify-end">
+                          <div className="col-span-3 flex justify-end">
                             <Input
                               type="number"
                               min="0"
                               placeholder="0"
                               value={qty[product.id]}
                               onChange={e => setQty(prev => ({ ...prev, [product.id]: e.target.value }))}
-                              className={`w-24 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-primary text-primary" : ""}`}
+                              className={`w-20 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-primary text-primary" : ""}`}
                               data-testid={`input-qty-${product.id}`}
                             />
                           </div>
@@ -296,25 +316,37 @@ export default function Home() {
                       </div>
 
                       {/* Formica badge */}
-                      <div className="col-span-2">
+                      <div className="col-span-1">
                         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 text-violet-700 font-bold text-xs">F</span>
                       </div>
 
                       {/* Description */}
-                      <div className="col-span-4">
+                      <div className="col-span-3">
                         <span className="text-sm font-medium text-foreground">{fp.name}</span>
-                        <span className="ml-2 text-xs text-muted-foreground hidden sm:inline">— {fp.desc}</span>
+                      </div>
+
+                      {/* Sheet size select */}
+                      <div className="col-span-3">
+                        <select
+                          value={size[fp.id]}
+                          onChange={e => setSize(prev => ({ ...prev, [fp.id]: e.target.value }))}
+                          className={`w-full h-9 rounded-md border px-2 text-sm bg-background transition-colors focus:outline-none focus:ring-1 focus:ring-violet-400 ${size[fp.id] ? "border-violet-400 text-foreground" : "border-border text-muted-foreground"}`}
+                          data-testid={`select-size-${fp.id}`}
+                        >
+                          <option value="">Any size</option>
+                          {SHEET_SIZES.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
                       </div>
 
                       {/* Qty input */}
-                      <div className="col-span-4 flex justify-end">
+                      <div className="col-span-3 flex justify-end">
                         <Input
                           type="number"
                           min="0"
                           placeholder="0"
                           value={qty[fp.id]}
                           onChange={e => setQty(prev => ({ ...prev, [fp.id]: e.target.value }))}
-                          className={`w-24 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-violet-400 text-violet-600" : ""}`}
+                          className={`w-20 text-right h-9 text-sm font-semibold transition-colors ${hasQty ? "border-violet-400 text-violet-600" : ""}`}
                           data-testid={`input-qty-${fp.id}`}
                         />
                       </div>
@@ -335,9 +367,14 @@ export default function Home() {
                           {selectedItems.length} product{selectedItems.length > 1 ? "s" : ""} selected — <span className="text-primary">{totalSheets} sheets total</span>
                         </p>
                         <div className="flex flex-wrap gap-1.5">
-                          {selectedItems.map(p => (
+                          {selectedPlywood.map(p => (
                             <Badge key={p.id} variant="secondary" className="text-xs bg-background border border-primary/20">
-                              {p.thickness} Grade {p.gradeLabel}: {qty[p.id]}
+                              {p.thickness} Gr.{p.gradeLabel}{size[p.id] ? ` ${size[p.id]}` : ""}: {qty[p.id]}
+                            </Badge>
+                          ))}
+                          {selectedFormica.map(p => (
+                            <Badge key={p.id} variant="secondary" className="text-xs bg-background border border-violet-200">
+                              Formica {p.name}{size[p.id] ? ` ${size[p.id]}` : ""}: {qty[p.id]}
                             </Badge>
                           ))}
                         </div>
