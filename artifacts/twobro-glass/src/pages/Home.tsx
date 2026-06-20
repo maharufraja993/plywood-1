@@ -519,9 +519,9 @@ export default function Home() {
               </div>
 
               <div className="rounded-2xl overflow-hidden border border-border h-[400px] bg-muted relative">
-                {/* Embed Map for Panitanki, Birgunj */}
+                {/* Exact location via Plus Code 2V8P+56 Birgunj */}
                 <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14217.51860012975!2d84.85698370000002!3d27.018260799999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3993544c68060803%3A0xc3f2cba04edc07!2sPanitanki%2C%20Birgunj%2044300%2C%20Nepal!5e0!3m2!1sen!2sus!4v1700000000000!5m2!1sen!2sus" 
+                  src="https://maps.google.com/maps?q=2V8P%2B56+Birgunj+Nepal&output=embed&z=18" 
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
