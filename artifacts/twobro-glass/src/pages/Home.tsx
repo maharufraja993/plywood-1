@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import heroImg from "@assets/pphoto_1782297743792.jpeg";
 import { MapPin, Phone, Mail, MessageCircle, Clock, ChevronRight, ShoppingCart, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,9 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-const WHATSAPP_LINK = "https://wa.me/9779807296911?text=Hello%2C%20I%20want%20to%20order%20plywood%20from%20Twobro%20Glass%20Centre";
-const PHONE_NUMBER = "9807296911";
-const EMAIL_ADDRESS = "maharufraja078@gmail.com";
+const WHATSAPP_LINK = "https://wa.me/9779827265050?text=Hello%2C%20I%20want%20to%20order%20plywood%20from%20Twobro%20Glass%20Centre";
+const PHONE_NUMBER = "9827265050";
+const EMAIL_ADDRESS = "hasanraja98@gmail.com";
 
 const THICKNESSES = ["6mm", "10mm", "12mm", "18mm"];
 const GRADES = [
@@ -66,7 +67,7 @@ export default function Home() {
       formicaLines && `*Formica:*\n${formicaLines}`,
     ].filter(Boolean).join("\n\n");
     const msg = `Hello, I would like to place an order from Twobro Glass Centre.\n\n*Order Details:*\n${sections}\n\n*Total: ${totalSheets} sheets*`;
-    window.open(`https://wa.me/9779807296911?text=${encodeURIComponent(msg)}`, "_blank");
+    window.open(`https://wa.me/9779827265050?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   const handleEmailSubmit = (e: React.FormEvent) => {
@@ -124,8 +125,14 @@ export default function Home() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-40 bg-card border-b border-border">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none" />
+        <section className="relative overflow-hidden pt-20 pb-32 md:pt-32 md:pb-40 border-b border-border">
+          {/* Photo background */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${heroImg})` }}
+          />
+          {/* Dark overlay so text stays readable */}
+          <div className="absolute inset-0 bg-black/60" />
           
           <div className="container mx-auto max-w-6xl px-4 relative z-10">
             <motion.div 
@@ -134,16 +141,16 @@ export default function Home() {
               transition={{ duration: 0.6 }}
               className="max-w-3xl"
             >
-              <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-sm font-medium text-primary mb-6" data-testid="badge-location">
+              <div className="inline-flex items-center rounded-full border border-white/30 bg-white/10 px-3 py-1 text-sm font-medium text-white mb-6" data-testid="badge-location">
                 <MapPin className="mr-1.5 h-4 w-4" /> Panitanki, Birgunj 44300
               </div>
               
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground mb-6 leading-tight">
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6 leading-tight">
                 Quality Plywood, <br />
                 <span className="text-primary">Trusted Supply.</span>
               </h1>
               
-              <p className="text-xl text-muted-foreground mb-10 max-w-2xl leading-relaxed">
+              <p className="text-xl text-white/75 mb-10 max-w-2xl leading-relaxed">
                 The reliable local choice for contractors, builders, and homeowners in Birgunj. Solid materials for solid builds.
               </p>
               
@@ -160,7 +167,7 @@ export default function Home() {
                   size="lg" 
                   asChild
                   variant="outline" 
-                  className="h-14 px-8 text-lg font-medium border-primary/20 hover:bg-primary/5 bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20"
+                  className="h-14 px-8 text-lg font-medium border-white/30 bg-[#25D366]/20 text-white hover:bg-[#25D366]/40"
                   data-testid="btn-hero-whatsapp"
                 >
                   <a href={WHATSAPP_LINK} target="_blank" rel="noopener noreferrer">
