@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 const WHATSAPP_LINK = "https://wa.me/9779827265050?text=Hello%2C%20I%20want%20to%20order%20plywood%20from%20Twobro%20Glass%20Centre";
 const PHONE_NUMBER = "9827265050";
-const EMAIL_ADDRESS = "hasanraja98@gmail.com";
+const EMAIL_ADDRESS = "twobroglasscentre@gmail.com";
 
 const THICKNESSES = ["6mm", "10mm", "12mm", "18mm"];
 const GRADES = [
