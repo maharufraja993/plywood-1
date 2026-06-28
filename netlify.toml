@@ -1,0 +1,4 @@
+[build]
+  base = "artifacts/twobro-glass"
+  command = "npm install --ignore-scripts --legacy-peer-deps && npm run build"
+  publish = "artifacts/twobro-glass/dist/public"
